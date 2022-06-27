@@ -1,5 +1,7 @@
+//importation du package "multer"de Node
 const multer = require('multer');
 
+//définition des fichiers acceptés
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',

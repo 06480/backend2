@@ -1,8 +1,12 @@
+//importation du package "bcrypt" de Node pour sécuriser le mot de passe
 const bcrypt = require('bcrypt')
+//importation du package "jwt" de Node pour sécuriser une session utilisateur avec un token
 const jwt = require('jsonwebtoken')
 
+//importation de User.js
 const User = require('../models/User')
 
+//export de fonction permettant l'inscription d'un utilisateur
 exports.signup = (req, res, next) => {
     bcrypt.hash(req.body.password, 10)
     .then(hash => {
@@ -18,6 +22,7 @@ exports.signup = (req, res, next) => {
       .catch(error => res.status(500).json({ error }));
 };
 
+//export de fonction permettant la connexion d'un utilisateur déjà inscrit
 exports.login = (req, res, next) => {
     User.findOne({ email: req.body.email })
     .then(user => {
