@@ -7,11 +7,15 @@ const fs = require('fs');
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
+    
     const sauce = new Sauce({
       ...sauceObject,
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
-    console.log(sauce)
+    console.log(req.file.filename
+    )
+    sauce.likes = 0;
+    sauce.dislikes = 0;
     sauce.save()
       .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
       .catch(error => res.status(400).json({ error }));
@@ -19,20 +23,24 @@ exports.createSauce = (req, res, next) => {
 
 //export de la fonction permettant la modification d'une sauce
 exports.modifySauce = (req, res, next) => {
-    const sauceObject = req.file ?
+  const sauceObject = req.file ?
     { 
       ...JSON.parse(req.body.sauce),
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : { ... req.body }
+    } : { ... req.body };
+    console.log('newimg', req.file.filename)
     Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
       .then(() => res.status(200).json({ message: 'Objet modifié !'}))
       .catch(error => res.status(400).json({ error }));
+   console.log(Sauce.find()
+   .then(sauces => res.status(200).json(sauces))) 
 };
 
 //export de la fonction permettant la suppression d'une sauce
 exports.deleteSauce = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
       .then(thing => {
+        console.log(thing)
         const filename = thing.imageUrl.split('/images/')[1];
         fs.unlink(`images/${filename}`,() => {
           Sauce.deleteOne({ _id: req.params.id })
@@ -62,24 +70,23 @@ exports.createLike =(req, res) => {
   Sauce.findOne({
     _id: req.params.id
   })
-  .then(sauce => {
-    console.log(req.body.like) 
+  .then(sauce => { 
     if (req.body.like == -1) {
-      sauce.dislikes = 1;
+      sauce.dislikes++;
       sauce.usersDisliked.push(req.body.userId);
       sauce.save();
     }
     if (req.body.like == 1) {
-      sauce.likes = 1;
+      sauce.likes++;
       sauce.usersLiked.push(req.body.userId);
       sauce.save();
     }
     if (req.body.like == 0){
       if (sauce.usersLiked.indexOf(req.body.userId) != -1){
-        sauce.likes = 0;
+        sauce.likes--;
         sauce.usersLiked.splice(sauce.usersLiked.indexOf(req.body.userId), 1);
       }else{
-        sauce.dislikes = 0;
+        sauce.dislikes--;
         sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(req.body.userId), 1);
       }
       sauce.save();
